@@ -14,16 +14,17 @@ class Update_wrk(Command):
 
     def get_parser(self, prog_name):
         parser = super(Update_wrk, self).get_parser(prog_name)
-        parser.add_argument(
-          '--environment',
-          required=True,
-          help='The name of the environment , e.g. Env170')
-        return parser
 
         parser.add_argument(
-          '--wrk',
-          required=True,
-          help='The WRK value , e.g. WRK123456')
+            '--wrk',
+            required=True,
+            help='The WRK value , e.g. WRK123456'
+        )
+        parser.add_argument(
+            '--environment',
+            required=True,
+            help='The name of the environment , e.g. Env170'
+        )
         return parser
 
     def take_action(self, parsed_args):
@@ -31,13 +32,33 @@ class Update_wrk(Command):
         wrk = parsed_args.wrk
         self.log.info('Environment is %s', environment)
 
-        ec2_client = self.app.client.get_ec2_client()
-        subnet_id = helper.get_subnet_id_by_name(ec2_client, environment)
-        subnet = self.app.client.ec2_subnet_resource(subnet_id)
-        self.log.debug('Updating WRK tag for the subnet')
-        subnet.create_tags(DryRun=True, Tags=[{WRK=wrk}])
+        ec2_client = self.app.client.ec2_client()
+        try:
+            subnet_id = helper.get_subnet_id_by_name(ec2_client, environment)
+            subnet = self.app.client.ec2_subnet_resource(subnet_id)
+            self.log.debug('Updating WRK tag for the subnet')
+            subnet.create_tags(
+                DryRun=True,
+                Tags=[
+                    {
+                        'Key' : 'WRK',
+                        'Value' : wrk
+                    },
+                ]
+            )
 
-        self.log.debug('Getting a list of all instances in the subnet')
-        instances = subnet.instances.all()
-        for instance in instances:
-            instance.create_tags(DryRun=True, Tags=[{WRK=wrk}])
+            self.log.debug('Getting a list of all instances in the subnet')
+            instances = subnet.instances.all()
+            for instance in instances:
+                instance.create_tags(
+                    DryRun=True,
+                    Tags=[
+                        {
+                            'Key': 'WRK',
+                            'Value': wrk
+                        },
+                    ]
+                )
+        except ValueError as err:
+            self.log.error(err.args)
+

@@ -52,6 +52,13 @@ class AwsManagementApp(App):
         )
 
         parser.add_argument(
+            '--version',
+            action='version',
+            version='%(prog)s {0}'.format(version),
+            help='Show program\'s version number and exit.',
+        )
+
+        parser.add_argument(
             '--debug',
             default=False,
             help='Show tracebacks on errors.')
