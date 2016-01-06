@@ -25,6 +25,17 @@ def get_subnet_id_by_name(ec2_client, env_name):
         log.debug('Subnet id is %s', subnet_id)
         return subnet_id
 
+def update_tag(client, key, value):
+    log = logging.getLogger(__name__)
+    log.debug('Updating WRK tag for the subnet')
+    client.create_tags(
+        Tags=[
+            {
+                'Key': key,
+                'Value': value
+            },
+        ]
+    )
 
 def parse_subnets_data(subnets):
     log = logging.getLogger(__name__)

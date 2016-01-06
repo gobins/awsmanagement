@@ -36,28 +36,14 @@ class Update_wrk(Command):
         try:
             subnet_id = helper.get_subnet_id_by_name(ec2_client, environment)
             subnet = self.app.client.ec2_subnet_resource(subnet_id)
-            self.log.debug('Updating WRK tag for the subnet')
-            subnet.create_tags(
-                DryRun=False,
-                Tags=[
-                    {
-                        'Key': 'WRK',
-                        'Value': wrk
-                    },
-                ]
-            )
-
+            helper.update_tag(subnet, 'WRK', wrk)
             self.log.debug('Getting a list of all instances in the subnet')
             instances = subnet.instances.all()
             for instance in instances:
-                instance.create_tags(
-                    DryRun=False,
-                    Tags=[
-                        {
-                            'Key': 'WRK',
-                            'Value': wrk
-                        },
-                    ]
-                )
+                helper.update_tag(instance, 'WRK', wrk)
+                volumes = instance.volumes.all()
+                for volume in volumes:
+                    helper.update_tag(volume, 'WRK', wrk)
+
         except ValueError as err:
             self.log.error(err.args)
