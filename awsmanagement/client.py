@@ -72,3 +72,8 @@ class Client(object):
         self.log.info('Getting AWS S3 session')
         s3_resource = self.app_session.resource('s3', verify=False)
         return s3_resource
+
+    def get_instances_by_subnet(subnet_id):
+        self.log.info('Retrieving all instances for subnet %s', subnet_id)
+        subnet_resource = self.ec2_subnet_resource(subnet_id)
+        return subnet_resource.instances.all()

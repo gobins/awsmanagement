@@ -38,11 +38,11 @@ class Update_wrk(Command):
             subnet = self.app.client.ec2_subnet_resource(subnet_id)
             self.log.debug('Updating WRK tag for the subnet')
             subnet.create_tags(
-                DryRun=True,
+                DryRun=False,
                 Tags=[
                     {
-                        'Key' : 'WRK',
-                        'Value' : wrk
+                        'Key': 'WRK',
+                        'Value': wrk
                     },
                 ]
             )
@@ -51,7 +51,7 @@ class Update_wrk(Command):
             instances = subnet.instances.all()
             for instance in instances:
                 instance.create_tags(
-                    DryRun=True,
+                    DryRun=False,
                     Tags=[
                         {
                             'Key': 'WRK',
@@ -61,4 +61,3 @@ class Update_wrk(Command):
                 )
         except ValueError as err:
             self.log.error(err.args)
-

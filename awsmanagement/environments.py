@@ -1,64 +1,46 @@
 import logging
-
+from awsmanagement import helper
 from cliff.lister import Lister
 
 
-class Environments(Lister):
+class GetEnvironments(Lister):
     log = logging.getLogger(__name__)
 
-    def get_parser(self, prog_name):
-        parser = super(Environments, self).get_parser(prog_name)
+    # def get_parser(self, prog_name):
+    #     parser = super(GetEnvironments, self).get_parser(prog_name)
 
-        parser.add_argument(
-            '--environment',
-            required=True,
-            help='The name of the environment , e.g. Env170'
-        )
+    #     parser.add_argument(
+    #         '--environment',
+    #         required=True,
+    #         help='The name of the environment , e.g. Env170'
+    #     )
 
-        return parser
+    #     return parser
 
     def take_action(self, parsed_args):
-        environment = parsed_args.environment
-        self.log.info('Environment is %s', environment)
+        # environment = parsed_args.environment
+        # self.log.info('Environment is %s', environment)
         ec2_client = self.app.client.ec2_client()
-        subnets = ec2_client.describe_subnets()
+        response = ec2_client.describe_subnets()
+        subnets = response['Subnets']
 
-        for subnet in subnets:
-            data = 
-        if subnets:
-            data = ((n['sr'], n['comment_karma'], n['link_karma']) for n in mykarma.data)
+        subnets_data = helper.parse_subnets_data(subnets)
+
+        if subnets_data:
+            data = (
+                (
+                    subnet['subnet_name'],
+                    subnet['cidr_block'],
+                    subnet['subnet_wrk'],
+                    subnet['subnet_id']
+                ) for subnet in subnets_data
+            )
             columns = (
                 'Name',
+                'CIDR Block',
                 'WRK',
-                'CIDR'
+                'Subnet Id'
             )
             return columns, data
         else:
             return None
-
-            subnet_id = helper.get_subnet_id_by_name(ec2_client, environment)
-            subnet = self.app.client.ec2_subnet_resource(subnet_id)
-            self.log.debug('Updating WRK tag for the subnet')
-            subnet.create_tags(
-                DryRun=True,
-                Tags=[
-                    {
-                        'Key' : 'WRK',
-                        'Value' : wrk
-                    },
-                ]
-            )
-
-            self.log.debug('Getting a list of all instances in the subnet')
-            instances = subnet.instances.all()
-            for instance in instances:
-                instance.create_tags(
-                    DryRun=True,
-                    Tags=[
-                        {
-                            'Key': 'WRK',
-                            'Value': wrk
-                        },
-                    ]
-                )
-
