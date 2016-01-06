@@ -37,6 +37,14 @@ def update_tag(client, key, value):
         ]
     )
 
+def get_tag_value(tags, key):
+    value = None
+    for tag in tags:
+        if tag['Key'] == key:
+            value = tag['Value']
+    return value
+
+
 def parse_subnets_data(subnets):
     log = logging.getLogger(__name__)
     subnets_data = []
@@ -45,19 +53,28 @@ def parse_subnets_data(subnets):
         parsed_data['subnet_id'] = subnet['SubnetId']
         parsed_data['cidr_block'] = subnet['CidrBlock']
         tags = subnet['Tags']
-        name_flag = False
-        wrk_flag = False
         log.debug('Parsing data for subnet %s', subnet['SubnetId'])
-        for tag in tags:
-            if tag['Key'] == "Name":
-                parsed_data['subnet_name'] = tag['Value']
-                name_flag = True
-            if tag['Key'] == 'WRK':
-                parsed_data['subnet_wrk'] = tag['Value']
-                wrk_flag = True
-        if name_flag is False:
-            parsed_data['subnet_name'] = "None"
-        if wrk_flag is False:
-            parsed_data['subnet_wrk'] = "None"
+        parsed_data['subnet_name'] = get_tag_value(tags, 'Name')
+        parsed_data['subnet_wrk'] = get_tag_value(tags, 'WRK')
         subnets_data.append(parsed_data)
     return subnets_data
+
+def parse_instances_data(instances):
+    log = logging.getLogger(__name__)
+    instances_data = []
+    for instance in instances:
+        log.debug('Parsing data for instance %s', instance.id)
+        parsed_data = {}
+        tags = instance.tags
+        if tags:
+            parsed_data['Name'] = get_tag_value(tags, 'Name')
+            parsed_data['Wrk'] = get_tag_value(tags, 'WRK')
+            parsed_data['State'] = instance.state['Name']
+            parsed_data['Launched_by'] = get_tag_value(tags, 'Launched_by')
+        else:
+            parsed_data['Name'] = instance.id
+            parsed_data['Wrk'] = "Not Set"
+            parsed_data['State'] = "Not Set"
+            parsed_data['Launched_by'] = "Not Set"
+        instances_data.append(parsed_data)
+    return instances_data
