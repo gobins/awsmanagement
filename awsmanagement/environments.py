@@ -21,7 +21,14 @@ class GetEnvironments(Lister):
         ec2_client = self.app.client.ec2_client()
         response = ec2_client.describe_subnets()
         subnets = response['Subnets']
-
+        self.log.debug('Retrieving all subnets data')
+        data = {}
+        columns = (
+                'Name',
+                'CIDR Block',
+                'WRK',
+                'Subnet Id'
+            )
         subnets_data = helper.parse_subnets_data(subnets)
         if subnets_data:
             data = (
@@ -32,15 +39,10 @@ class GetEnvironments(Lister):
                     subnet['subnet_id']
                 ) for subnet in subnets_data
             )
-            columns = (
-                'Name',
-                'CIDR Block',
-                'WRK',
-                'Subnet Id'
-            )
             return columns, data
         else:
-            return None
+            self.log.debug('No subnets data found')
+            return columns, data
 
 
 class GetInstances(Lister):
@@ -59,13 +61,21 @@ class GetInstances(Lister):
 
     def take_action(self, parsed_args):
         env_name = parsed_args.environment
+        self.log.debug('Getting all instances in environment %s', env_name)
         ec2_client = self.app.client.ec2_client()
         subnet_id = helper.get_subnet_id_by_name(ec2_client, env_name)
         subnet_resource = self.app.client.ec2_subnet_resource(subnet_id)
         instances = subnet_resource.instances.all()
         instances_data = helper.parse_instances_data(instances)
-
+        columns = (
+                'Name',
+                'State',
+                'WRK',
+                'Launched_by'
+            )
+        data = {}
         if instances_data:
+            self.log.debug('Constructing Lister data for instances.')
             data = (
                 (
                     instance['Name'],
@@ -74,12 +84,7 @@ class GetInstances(Lister):
                     instance['Launched_by']
                 ) for instance in instances_data
             )
-            columns = (
-                'Name',
-                'State',
-                'WRK',
-                'Launched_by'
-            )
             return columns, data
         else:
-            return None
+            self.log.info('No instances found in the subnet')
+            return columns, data

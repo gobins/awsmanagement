@@ -5,6 +5,7 @@ import os
 
 from cliff.app import App
 from cliff.commandmanager import CommandManager
+from cliff.complete import CompleteCommand
 from awsmanagement import client
 
 
@@ -18,6 +19,7 @@ class AwsManagementApp(App):
             version='0.1',
             command_manager=CommandManager('awsmanagement.app'),
             )
+        self.command_manager.add_command('complete', CompleteCommand)
 
     def configure_logging(self):
         log_lvl = logging.DEBUG if self.options.debug else logging.WARNING
